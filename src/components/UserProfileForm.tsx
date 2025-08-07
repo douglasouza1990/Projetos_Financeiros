@@ -11,6 +11,10 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({ profile, onUpdate }) 
     onUpdate({ ...profile, [field]: value });
   };
 
+  const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    e.currentTarget.select();
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">
@@ -31,6 +35,7 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({ profile, onUpdate }) 
               step="0.1"
               value={profile.weight}
               onChange={(e) => handleChange('weight', parseFloat(e.target.value) || 0)}
+              onClick={handleClick}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="70"
             />
@@ -57,6 +62,7 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({ profile, onUpdate }) 
                 step="0.1"
                 value={profile.proteinGoal}
                 onChange={(e) => handleChange('proteinGoal', parseFloat(e.target.value) || 0)}
+                onClick={handleClick}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 placeholder="2.0"
               />
@@ -80,6 +86,7 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({ profile, onUpdate }) 
                 step="0.1"
                 value={profile.fatGoal}
                 onChange={(e) => handleChange('fatGoal', parseFloat(e.target.value) || 0)}
+                onClick={handleClick}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 placeholder="1.0"
               />
@@ -103,6 +110,7 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({ profile, onUpdate }) 
                 step="0.1"
                 value={profile.carbGoal}
                 onChange={(e) => handleChange('carbGoal', parseFloat(e.target.value) || 0)}
+                onClick={handleClick}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 placeholder="3.0"
               />

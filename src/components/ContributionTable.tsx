@@ -58,6 +58,10 @@ const ContributionTable: React.FC<ContributionTableProps> = ({ schedule, onUpdat
     setFocusedField(null);
   };
 
+  const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    e.currentTarget.select();
+  };
+
   const getDisplayValue = (value: number) => {
     if (focusedField) {
       return formatCurrency(value);
@@ -101,6 +105,7 @@ const ContributionTable: React.FC<ContributionTableProps> = ({ schedule, onUpdat
                     type="number"
                     value={entry.year}
                     onChange={(e) => updateRow(index, 'year', Number(e.target.value))}
+                    onClick={handleClick}
                     className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
                     min={1}
                   />
@@ -112,6 +117,7 @@ const ContributionTable: React.FC<ContributionTableProps> = ({ schedule, onUpdat
                     onChange={(e) => updateRow(index, 'monthlyAmount', parseCurrency(e.target.value))}
                     onFocus={() => handleFocus(`monthlyAmount-${index}`)}
                     onBlur={() => handleBlur(`monthlyAmount-${index}`)}
+                    onClick={handleClick}
                     className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
                   />
                 </td>

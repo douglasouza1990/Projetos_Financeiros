@@ -9,10 +9,14 @@ interface FoodIntakeFormProps {
 
 const FoodIntakeForm: React.FC<FoodIntakeFormProps> = ({ onAddFood }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
-  const [quantity, setQuantity] = useState(100);
   const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
+  const [quantity, setQuantity] = useState(100);
+
+  const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    e.currentTarget.select();
+  };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -69,6 +73,7 @@ const FoodIntakeForm: React.FC<FoodIntakeFormProps> = ({ onAddFood }) => {
             type="text"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
+            onClick={handleClick}
             placeholder="Digite o nome do alimento..."
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
@@ -106,6 +111,7 @@ const FoodIntakeForm: React.FC<FoodIntakeFormProps> = ({ onAddFood }) => {
               max="1000"
               value={quantity}
               onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
+              onClick={handleClick}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="100"
             />
