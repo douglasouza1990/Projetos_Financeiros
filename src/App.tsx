@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Banner from './components/Banner';
 import RetirementPlanner from './components/RetirementPlanner';
+import VersionInfo from './components/VersionInfo';
 import type { UserData, ProjectionData } from './types';
 
 function App() {
@@ -97,6 +98,7 @@ function App() {
           onUncertaintyUpdate={handleUncertaintyUpdate}
         />
       </div>
+      <VersionInfo />
     </div>
   );
 }
