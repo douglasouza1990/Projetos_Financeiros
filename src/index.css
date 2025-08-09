@@ -1,3 +1,44 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Melhorias globais para inputs */
+@layer base {
+  /* Seleção automática global melhorada */
+  input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]) {
+    @apply transition-all duration-200;
+  }
+  
+  /* Feedback visual aprimorado para foco */
+  input:focus:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]) {
+    @apply ring-2 ring-teal-500/20 border-teal-500;
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+  }
+  
+  /* Transições suaves para hover */
+  input:hover:not([disabled]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]) {
+    @apply border-gray-400;
+  }
+  
+  /* Estados de erro melhorados */
+  input.error {
+    @apply border-red-500 bg-red-50/50;
+  }
+  
+  input.error:focus {
+    @apply ring-red-500/20 border-red-500;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+}
+
+/* Animações para transições suaves */
+@layer utilities {
+  .input-glow {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .input-glow:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px -2px rgba(20, 184, 166, 0.1), 0 0 0 3px rgba(20, 184, 166, 0.1);
+  }
+}

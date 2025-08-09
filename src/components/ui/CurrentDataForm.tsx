@@ -1,5 +1,6 @@
 import React from 'react';
 import type { UserData } from '../../types';
+import SmartInput from './SmartInput';
 
 interface CurrentDataFormProps {
   userData: UserData;
@@ -7,89 +8,61 @@ interface CurrentDataFormProps {
 }
 
 const CurrentDataForm: React.FC<CurrentDataFormProps> = ({ userData, onUpdate }) => {
-  const [focusedField, setFocusedField] = React.useState<string | null>(null);
-
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
-
-  const parseCurrency = (value: string) => {
-    return Number(value.replace(/\./g, '').replace(',', '.'));
-  };
-
   const handleChange = (key: keyof UserData, value: any) => {
     onUpdate({ ...userData, [key]: value });
   };
 
-  const handleFocus = (field: string) => {
-    setFocusedField(field);
-  };
-
-  const handleBlur = () => {
-    setFocusedField(null);
-  };
-
-
-
-  const getDisplayValue = (field: keyof UserData, value: number) => {
-    if (focusedField === field) {
-      return formatCurrency(value);
-    }
-    return value.toString();
-  };
-
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-lg font-semibold mb-4 text-gray-700">📋 Dados Atuais</h2>
-      <div className="grid grid-cols-4 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-600">Data Inicial</label>
-          <input
-            type="date"
-            value={userData.initialDate}
-            onChange={(e) => handleChange('initialDate', e.target.value)}
-
-            className="mt-1 w-full border rounded p-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-600">Idade Atual</label>
-          <input
-            type="number"
-            value={userData.currentAge}
-            onChange={(e) => handleChange('currentAge', Number(e.target.value))}
-            onFocus={() => handleFocus('currentAge')}
-
-            className="mt-1 w-full border rounded p-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-600">Idade de Aposentadoria Desejada</label>
-          <input
-            type="number"
-            value={userData.retirementAge}
-            onChange={(e) => handleChange('retirementAge', Number(e.target.value))}
-            onFocus={() => handleFocus('retirementAge')}
-
-            className="mt-1 w-full border rounded p-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-600">Valor Inicial</label>
-          <input
-            type="text"
-            value={getDisplayValue('initialAccumulation', userData.initialAccumulation)}
-            onChange={(e) => handleChange('initialAccumulation', parseCurrency(e.target.value))}
-            onFocus={() => handleFocus('initialAccumulation')}
-            onBlur={handleBlur}
-
-            className="mt-1 w-full border rounded p-2"
-          />
-        </div>
-      </div>
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <h2 className="text-lg font-semibold mb-6 text-gray-800 flex items-center">
+        <span className="bg-gradient-to-r from-teal-500 to-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm mr-3">
+          📋
+        </span>
+        Dados Atuais
+      </h2>
+      
+      <form className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <SmartInput
+          type="date"
+          label="Data Inicial"
+          value={userData.initialDate}
+          onChange={(value) => handleChange('initialDate', value)}
+          placeholder="Selecione a data inicial"
+          required
+        />
+        
+        <SmartInput
+          type="number"
+          label="Idade Atual"
+          value={userData.currentAge}
+          onChange={(value) => handleChange('currentAge', value)}
+          placeholder="Ex: 35"
+          min={18}
+          max={100}
+          required
+        />
+        
+        <SmartInput
+          type="number"
+          label="Idade de Aposentadoria"
+          value={userData.retirementAge}
+          onChange={(value) => handleChange('retirementAge', value)}
+          placeholder="Ex: 65"
+          min={50}
+          max={85}
+          required
+        />
+        
+        <SmartInput
+          type="currency"
+          label="Valor Inicial"
+          value={userData.initialAccumulation}
+          onChange={(value) => handleChange('initialAccumulation', value)}
+          placeholder="Ex: 50.000,00"
+          min={0}
+          required
+        />
+      </form>
     </div>
   );
 };
