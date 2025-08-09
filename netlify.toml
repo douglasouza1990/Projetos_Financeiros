@@ -1,6 +1,11 @@
 [build]
-  publish = "dist"
   command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 
 [[headers]]
   for = "/assets/*.js"
@@ -8,21 +13,6 @@
     Content-Type = "application/javascript"
 
 [[headers]]
-  for = "/src/*.js"
-  [headers.values]
-    Content-Type = "application/javascript"
-
-[[headers]]
-  for = "/src/*.tsx"
-  [headers.values]
-    Content-Type = "application/javascript"
-
-[[headers]]
   for = "/*.js"
   [headers.values]
     Content-Type = "application/javascript"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
