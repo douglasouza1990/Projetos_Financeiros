@@ -32,9 +32,7 @@ const RetirementGoalsForm: React.FC<RetirementGoalsFormProps> = ({ userData, onU
     setFocusedField(null);
   };
 
-  const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
-    e.currentTarget.select();
-  };
+
 
   const getDisplayValue = (field: keyof UserData, value: number) => {
     if (focusedField === field) {
@@ -55,7 +53,7 @@ const RetirementGoalsForm: React.FC<RetirementGoalsFormProps> = ({ userData, onU
             onChange={(e) => handleChange('annualContribution', parseCurrency(e.target.value))}
             onFocus={() => handleFocus('annualContribution')}
             onBlur={() => handleBlur('annualContribution')}
-            onClick={handleClick}
+
             className="mt-1 w-full border rounded p-2"
           />
         </div>
@@ -67,7 +65,7 @@ const RetirementGoalsForm: React.FC<RetirementGoalsFormProps> = ({ userData, onU
             onChange={(e) => handleChange('monthlyBenefit', parseCurrency(e.target.value))}
             onFocus={() => handleFocus('monthlyBenefit')}
             onBlur={() => handleBlur('monthlyBenefit')}
-            onClick={handleClick}
+
             className="mt-1 w-full border rounded p-2"
           />
         </div>
@@ -79,7 +77,7 @@ const RetirementGoalsForm: React.FC<RetirementGoalsFormProps> = ({ userData, onU
             onChange={(e) => handleChange('extraMonthlyIncome', parseCurrency(e.target.value))}
             onFocus={() => handleFocus('extraMonthlyIncome')}
             onBlur={() => handleBlur('extraMonthlyIncome')}
-            onClick={handleClick}
+
             className="mt-1 w-full border rounded p-2"
           />
         </div>
@@ -89,7 +87,7 @@ const RetirementGoalsForm: React.FC<RetirementGoalsFormProps> = ({ userData, onU
             type="number"
             value={userData.realReturnRate}
             onChange={(e) => handleChange('realReturnRate', Number(e.target.value))}
-            onClick={handleClick}
+
             className="mt-1 w-full border rounded p-2"
           />
         </div>

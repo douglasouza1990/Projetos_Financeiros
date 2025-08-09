@@ -40,6 +40,35 @@ function App() {
     };
   }, []);
 
+  // Aplicar seleção automática global para todos os campos de input
+  React.useEffect(() => {
+    const handleInputFocus = (event: Event) => {
+      const target = event.target as HTMLElement;
+      
+      // Verificar se é um campo de input que deve ter seleção automática
+      if (
+        target.tagName === 'INPUT' && 
+        (target as HTMLInputElement).type !== 'button' &&
+        (target as HTMLInputElement).type !== 'submit' &&
+        (target as HTMLInputElement).type !== 'reset' &&
+        (target as HTMLInputElement).type !== 'checkbox' &&
+        (target as HTMLInputElement).type !== 'radio'
+      ) {
+        // Pequeno delay para garantir que o foco foi estabelecido
+        setTimeout(() => {
+          (target as HTMLInputElement).select();
+        }, 10);
+      }
+    };
+
+    // Adicionar o listener para toda a aplicação
+    document.addEventListener('focusin', handleInputFocus);
+
+    return () => {
+      document.removeEventListener('focusin', handleInputFocus);
+    };
+  }, []);
+
   // Calcular projeção sempre que houver mudanças
   React.useEffect(() => {
     const calculateProjection = () => {

@@ -32,9 +32,7 @@ const CurrentDataForm: React.FC<CurrentDataFormProps> = ({ userData, onUpdate })
     setFocusedField(null);
   };
 
-  const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
-    e.currentTarget.select();
-  };
+
 
   const getDisplayValue = (field: keyof UserData, value: number) => {
     if (focusedField === field) {
@@ -53,7 +51,7 @@ const CurrentDataForm: React.FC<CurrentDataFormProps> = ({ userData, onUpdate })
             type="date"
             value={userData.initialDate}
             onChange={(e) => handleChange('initialDate', e.target.value)}
-            onClick={handleClick}
+
             className="mt-1 w-full border rounded p-2"
           />
         </div>
@@ -64,7 +62,7 @@ const CurrentDataForm: React.FC<CurrentDataFormProps> = ({ userData, onUpdate })
             value={userData.currentAge}
             onChange={(e) => handleChange('currentAge', Number(e.target.value))}
             onFocus={() => handleFocus('currentAge')}
-            onClick={handleClick}
+
             className="mt-1 w-full border rounded p-2"
           />
         </div>
@@ -75,7 +73,7 @@ const CurrentDataForm: React.FC<CurrentDataFormProps> = ({ userData, onUpdate })
             value={userData.retirementAge}
             onChange={(e) => handleChange('retirementAge', Number(e.target.value))}
             onFocus={() => handleFocus('retirementAge')}
-            onClick={handleClick}
+
             className="mt-1 w-full border rounded p-2"
           />
         </div>
@@ -87,7 +85,7 @@ const CurrentDataForm: React.FC<CurrentDataFormProps> = ({ userData, onUpdate })
             onChange={(e) => handleChange('initialAccumulation', parseCurrency(e.target.value))}
             onFocus={() => handleFocus('initialAccumulation')}
             onBlur={handleBlur}
-            onClick={handleClick}
+
             className="mt-1 w-full border rounded p-2"
           />
         </div>
