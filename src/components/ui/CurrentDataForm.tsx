@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import type { UserData } from '../../types';
 
 interface CurrentDataFormProps {
@@ -28,7 +28,7 @@ const CurrentDataForm: React.FC<CurrentDataFormProps> = ({ userData, onUpdate })
     setFocusedField(field);
   };
 
-  const handleBlur = (field: string) => {
+  const handleBlur = () => {
     setFocusedField(null);
   };
 
@@ -86,7 +86,7 @@ const CurrentDataForm: React.FC<CurrentDataFormProps> = ({ userData, onUpdate })
             value={getDisplayValue('initialAccumulation', userData.initialAccumulation)}
             onChange={(e) => handleChange('initialAccumulation', parseCurrency(e.target.value))}
             onFocus={() => handleFocus('initialAccumulation')}
-            onBlur={() => handleBlur('initialAccumulation')}
+            onBlur={handleBlur}
             onClick={handleClick}
             className="mt-1 w-full border rounded p-2"
           />

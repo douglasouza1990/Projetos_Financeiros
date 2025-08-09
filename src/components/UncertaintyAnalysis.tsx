@@ -1,6 +1,5 @@
 import React from 'react';
-import { AlertTriangle } from 'lucide-react';
-import SelectField from './ui/SelectField';
+import { AlertTriangle, ChevronDown } from 'lucide-react';
 
 interface UncertaintyAnalysisProps {
   uncertainties: {
@@ -29,33 +28,93 @@ const UncertaintyAnalysis: React.FC<UncertaintyAnalysisProps> = ({ uncertainties
       </h3>
       
       <div className="grid grid-cols-4 gap-4">
-        <SelectField
-          label="Incerteza do Aporte Anual"
-          value={uncertainties.annualContribution}
-          onChange={(value) => onUpdate('annualContribution', Number(value))}
-          options={uncertaintyOptions}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Incerteza do Aporte Anual
+          </label>
+          <div className="relative">
+            <select
+              value={uncertainties.annualContribution}
+              onChange={(e) => onUpdate('annualContribution', Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 appearance-none bg-white hover:border-gray-400"
+            >
+              {uncertaintyOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+              <ChevronDown className="h-4 w-4" />
+            </div>
+          </div>
+        </div>
         
-        <SelectField
-          label="Incerteza do Benefício Mensal"
-          value={uncertainties.monthlyBenefit}
-          onChange={(value) => onUpdate('monthlyBenefit', Number(value))}
-          options={uncertaintyOptions}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Incerteza do Benefício Mensal
+          </label>
+          <div className="relative">
+            <select
+              value={uncertainties.monthlyBenefit}
+              onChange={(e) => onUpdate('monthlyBenefit', Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 appearance-none bg-white hover:border-gray-400"
+            >
+              {uncertaintyOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+              <ChevronDown className="h-4 w-4" />
+            </div>
+          </div>
+        </div>
         
-        <SelectField
-          label="Incerteza da Renda Extra"
-          value={uncertainties.extraIncome}
-          onChange={(value) => onUpdate('extraIncome', Number(value))}
-          options={uncertaintyOptions}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Incerteza da Renda Extra
+          </label>
+          <div className="relative">
+            <select
+              value={uncertainties.extraIncome}
+              onChange={(e) => onUpdate('extraIncome', Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 appearance-none bg-white hover:border-gray-400"
+            >
+              {uncertaintyOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+              <ChevronDown className="h-4 w-4" />
+            </div>
+          </div>
+        </div>
         
-        <SelectField
-          label="Incerteza da Rentabilidade"
-          value={uncertainties.returnRate}
-          onChange={(value) => onUpdate('returnRate', Number(value))}
-          options={uncertaintyOptions}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Incerteza da Rentabilidade
+          </label>
+          <div className="relative">
+            <select
+              value={uncertainties.returnRate}
+              onChange={(e) => onUpdate('returnRate', Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 appearance-none bg-white hover:border-gray-400"
+            >
+              {uncertaintyOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+              <ChevronDown className="h-4 w-4" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
