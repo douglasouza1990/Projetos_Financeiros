@@ -61,7 +61,6 @@ const SmartInput: React.FC<SmartInputProps> = ({
     switch (type) {
       case 'currency':
         parsedValue = parseCurrency(inputValue);
-        console.log(`SmartInput Currency: "${inputValue}" -> ${parsedValue}`);
         break;
       case 'percentage':
         parsedValue = parsePercentage(inputValue);

@@ -392,17 +392,7 @@ const ProjectionChart: React.FC<ProjectionChartProps> = ({ userData, data, uncer
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Projeção de Aposentadoria</h2>
         
-        {/* Indicador de Validação */}
-        {validationResult !== undefined && hasUncertainties && (
-          <div className={`flex items-center space-x-2 px-3 py-1 rounded-md text-sm ${
-            validationResult.orderCorrect 
-              ? 'bg-green-100 text-green-700' 
-              : 'bg-red-100 text-red-700'
-          }`}>
-            <span>{validationResult.orderCorrect ? '✅' : '❌'}</span>
-            <span>{validationResult.orderCorrect ? 'Cálculos validados' : 'Erro nos cálculos'}</span>
-          </div>
-        )}
+
         
         <button
           onClick={() => {

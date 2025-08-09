@@ -1,6 +1,7 @@
 import React from 'react';
 import type { UserData } from '../../types';
 import SmartInput from './SmartInput';
+import { getEstimatedRealReturn, getCDIInfo } from '../../utils/cdiCalculator';
 
 interface RetirementGoalsFormProps {
   userData: UserData;
@@ -8,9 +9,20 @@ interface RetirementGoalsFormProps {
 }
 
 const RetirementGoalsForm: React.FC<RetirementGoalsFormProps> = ({ userData, onUpdate }) => {
+  // Preencher rentabilidade real automaticamente se estiver em 0
+  React.useEffect(() => {
+    if (userData.realReturnRate === 0 && userData.initialDate) {
+      const estimatedReturn = getEstimatedRealReturn(userData.initialDate);
+      handleChange('realReturnRate', estimatedReturn);
+    }
+  }, [userData.initialDate, userData.realReturnRate]);
+
   const handleChange = (key: keyof UserData, value: any) => {
     onUpdate({ ...userData, [key]: value });
   };
+  
+  // Obter informações do CDI para exibir tooltip
+  const cdiInfo = getCDIInfo(userData.initialDate);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -50,16 +62,23 @@ const RetirementGoalsForm: React.FC<RetirementGoalsFormProps> = ({ userData, onU
           min={0}
         />
         
-        <SmartInput
-          type="percentage"
-          label="Rentabilidade Real (% a.a.)"
-          value={userData.realReturnRate}
-          onChange={(value) => handleChange('realReturnRate', value)}
-          placeholder="Ex: 6,5"
-          min={0}
-          max={30}
-          required
-        />
+        <div className="relative">
+          <SmartInput
+            type="percentage"
+            label="Rentabilidade Real (% a.a.)"
+            value={userData.realReturnRate}
+            onChange={(value) => handleChange('realReturnRate', value)}
+            placeholder="Ex: 6,5"
+            min={0}
+            max={30}
+            required
+          />
+          <div className="mt-1 text-xs text-gray-500 bg-blue-50 p-2 rounded border border-blue-200">
+            💡 <strong>Auto-preenchido:</strong> {cdiInfo.description}
+            <br />
+            <span className="text-blue-600">Baseado em CDI 100% descontando inflação estimada</span>
+          </div>
+        </div>
       </form>
     </div>
   );
