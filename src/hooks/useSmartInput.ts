@@ -84,12 +84,24 @@ export const useSmartInput = (options: SmartInputOptions) => {
 
 // Funções auxiliares de formatação
 const formatCurrency = (value: string): string => {
-  const numbers = value.replace(/\D/g, '');
-  const num = parseInt(numbers) / 100;
-  return num.toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+  // Remove tudo exceto números, pontos e vírgulas
+  const cleanValue = value.replace(/[^\d.,]/g, '');
+  
+  // Se vazio, retorna vazio
+  if (!cleanValue) return '';
+  
+  // Converte para número
+  const num = parseFloat(cleanValue.replace(',', '.'));
+  
+  // Se é um número válido, formata
+  if (!isNaN(num)) {
+    return num.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+  
+  return cleanValue;
 };
 
 const formatPercentage = (value: string): string => {
@@ -103,7 +115,10 @@ const formatNumber = (value: string): string => {
 
 // Parse functions
 export const parseCurrency = (value: string): number => {
-  return parseFloat(value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+  // Remove tudo exceto números, pontos e vírgulas
+  const cleanValue = value.replace(/[^\d.,]/g, '').replace(',', '.');
+  const num = parseFloat(cleanValue);
+  return isNaN(num) ? 0 : num;
 };
 
 export const parsePercentage = (value: string): number => {
