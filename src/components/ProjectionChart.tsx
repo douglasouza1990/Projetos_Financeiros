@@ -47,87 +47,58 @@ const ProjectionChart: React.FC<ProjectionChartProps> = ({ userData, data, uncer
     let pessimisticValue = currentValue;
     let optimisticValue = currentValue;
     
-
-    
-
-    
     for (let year = 0; year <= (90 - userData.currentAge); year++) {
       const age = userData.currentAge + year;
       years.push(age);
       
+      // ===== ADICIONAR VALORES ATUAIS AOS ARRAYS PRIMEIRO =====
+      values.push(accumulatedValue);
+      pessimisticValues.push(pessimisticValue);
+      optimisticValues.push(optimisticValue);
+      
       // Encontrar contribuição específica para este ano, se existir
       const specificContribution = contributionSchedule.find(entry => entry.year === year + 1);
-      // O campo monthlyAmount na verdade representa o aporte anual
-      let annualContribution = specificContribution ? specificContribution.monthlyAmount : userData.annualContribution;
+      const baseAnnualContribution = specificContribution ? specificContribution.monthlyAmount : userData.annualContribution;
       
       // Verificar se a pessoa já se aposentou
       const isRetired = age >= userData.retirementAge;
       
+      // ===== CÁLCULOS MATEMATICAMENTE CORRETOS =====
+      
+      // 1. CENÁRIO BASE
+      let baseCashFlow = baseAnnualContribution;
       if (isRetired) {
-        // Após a aposentadoria: usar exatamente os valores preenchidos
-        // O benefício mensal e renda extra já estão nos valores corretos
-        // Não há necessidade de ajustar a contribuição anual
+        baseCashFlow = baseCashFlow + (userData.extraMonthlyIncome * 12) - (userData.monthlyBenefit * 12);
       }
+      accumulatedValue = accumulatedValue + baseCashFlow + (accumulatedValue * returnRate);
       
-
-      
-
-      
-
-      
-      // Cenário base
-      values.push(accumulatedValue);
-      
-      // Calcular renda total anual
-      let totalAnnualIncome = annualContribution;
-      
-      // A partir da aposentadoria, adicionar renda mensal extra e subtrair benefício mensal
-      if (isRetired) {
-        totalAnnualIncome = totalAnnualIncome + (userData.extraMonthlyIncome * 12) - (userData.monthlyBenefit * 12);
-      }
-      
-      // Se a renda total for negativa, significa que estamos gastando mais do que ganhando
-      const newValue = accumulatedValue + totalAnnualIncome + (accumulatedValue * returnRate);
-      
-
-      
-      accumulatedValue = newValue;
-      
-      // Cenário pessimista baseado nas incertezas
-      let pessimisticContribution = annualContribution * (1 - uncertaintyData.annualContribution / 100);
+      // 2. CENÁRIO PESSIMISTA (tudo pior para o investidor)
+      const pessimisticContribution = baseAnnualContribution * (1 - uncertaintyData.annualContribution / 100);
       const pessimisticReturn = returnRate * (1 - uncertaintyData.returnRate / 100);
-      let pessimisticExtraIncome = userData.extraMonthlyIncome * (1 - uncertaintyData.extraIncome / 100);
-      const pessimisticBenefit = userData.monthlyBenefit * (1 - uncertaintyData.monthlyBenefit / 100);
+      const pessimisticExtraIncome = userData.extraMonthlyIncome * (1 - uncertaintyData.extraIncome / 100);
+      // IMPORTANTE: Mais incerteza no benefício = MAIS gastos (pior cenário)
+      const pessimisticBenefit = userData.monthlyBenefit * (1 + uncertaintyData.monthlyBenefit / 100);
       
-      let totalPessimisticIncome = pessimisticContribution;
-      
-      // A partir da aposentadoria, adicionar renda mensal extra e subtrair benefício mensal
+      let pessimisticCashFlow = pessimisticContribution;
       if (isRetired) {
-        const annualPessimisticBenefit = pessimisticBenefit * 12;
-        totalPessimisticIncome = totalPessimisticIncome + (pessimisticExtraIncome * 12) - annualPessimisticBenefit;
+        pessimisticCashFlow = pessimisticCashFlow + (pessimisticExtraIncome * 12) - (pessimisticBenefit * 12);
       }
+      pessimisticValue = pessimisticValue + pessimisticCashFlow + (pessimisticValue * pessimisticReturn);
       
-      pessimisticValues.push(pessimisticValue);
-      pessimisticValue = pessimisticValue + totalPessimisticIncome + (pessimisticValue * pessimisticReturn);
-      
-      // Cenário otimista baseado nas incertezas
-      let optimisticContribution = annualContribution * (1 + uncertaintyData.annualContribution / 100);
+      // 3. CENÁRIO OTIMISTA (tudo melhor para o investidor)
+      const optimisticContribution = baseAnnualContribution * (1 + uncertaintyData.annualContribution / 100);
       const optimisticReturn = returnRate * (1 + uncertaintyData.returnRate / 100);
-      let optimisticExtraIncome = userData.extraMonthlyIncome * (1 + uncertaintyData.extraIncome / 100);
-      const optimisticBenefit = userData.monthlyBenefit * (1 + uncertaintyData.monthlyBenefit / 100);
+      const optimisticExtraIncome = userData.extraMonthlyIncome * (1 + uncertaintyData.extraIncome / 100);
+      // IMPORTANTE: Menos incerteza no benefício = MENOS gastos (melhor cenário)
+      const optimisticBenefit = userData.monthlyBenefit * (1 - uncertaintyData.monthlyBenefit / 100);
       
-      let totalOptimisticIncome = optimisticContribution;
-      
-      // A partir da aposentadoria, adicionar renda mensal extra e subtrair benefício mensal
+      let optimisticCashFlow = optimisticContribution;
       if (isRetired) {
-        const annualOptimisticBenefit = optimisticBenefit * 12;
-        totalOptimisticIncome = totalOptimisticIncome + (optimisticExtraIncome * 12) - annualOptimisticBenefit;
+        optimisticCashFlow = optimisticCashFlow + (optimisticExtraIncome * 12) - (optimisticBenefit * 12);
       }
+      optimisticValue = optimisticValue + optimisticCashFlow + (optimisticValue * optimisticReturn);
       
-      optimisticValues.push(optimisticValue);
-      optimisticValue = optimisticValue + totalOptimisticIncome + (optimisticValue * optimisticReturn);
-      
-      // Se todas as incertezas são 0, garantir que os cenários sejam iguais ao base
+      // ===== GARANTIR CONSISTÊNCIA QUANDO NÃO HÁ INCERTEZAS =====
       if (uncertaintyData.annualContribution === 0 && 
           uncertaintyData.returnRate === 0 && 
           uncertaintyData.extraIncome === 0 &&
@@ -135,10 +106,6 @@ const ProjectionChart: React.FC<ProjectionChartProps> = ({ userData, data, uncer
         pessimisticValue = accumulatedValue;
         optimisticValue = accumulatedValue;
       }
-      
-
-      
-
     }
     
     return { years, values, pessimisticValues, optimisticValues };
@@ -158,29 +125,43 @@ const ProjectionChart: React.FC<ProjectionChartProps> = ({ userData, data, uncer
       const pessimisticValue = projectionData.pessimisticValues[lastIndex];
       const optimisticValue = projectionData.optimisticValues[lastIndex];
       
-      console.log('Validação dos Limites:', {
-        valorBase: baseValue,
-        limiteInferior: pessimisticValue,
-        limiteSuperior: optimisticValue,
-        diferencaInferior: ((pessimisticValue - baseValue) / baseValue * 100).toFixed(2) + '%',
-        diferencaSuperior: ((optimisticValue - baseValue) / baseValue * 100).toFixed(2) + '%',
+      console.log('🔍 Validação Matemática dos Limites:', {
+        valorBase: baseValue?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+        limiteInferior: pessimisticValue?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+        limiteSuperior: optimisticValue?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+        diferencaInferior: baseValue ? ((pessimisticValue - baseValue) / baseValue * 100).toFixed(2) + '%' : 'N/A',
+        diferencaSuperior: baseValue ? ((optimisticValue - baseValue) / baseValue * 100).toFixed(2) + '%' : 'N/A',
         incertezas: uncertaintyData
       });
       
-      // Verificar se os limites fazem sentido
-      if (pessimisticValue > baseValue) {
-        console.warn('⚠️ Limite inferior maior que valor base!');
+      // Verificações de consistência matemática
+      const isValid = {
+        pessimisticLower: pessimisticValue <= baseValue,
+        optimisticHigher: optimisticValue >= baseValue,
+        orderCorrect: pessimisticValue <= baseValue && baseValue <= optimisticValue
+      };
+      
+      if (!isValid.pessimisticLower) {
+        console.error('❌ ERRO: Limite inferior maior que valor base!');
       }
-      if (optimisticValue < baseValue) {
-        console.warn('⚠️ Limite superior menor que valor base!');
+      if (!isValid.optimisticHigher) {
+        console.error('❌ ERRO: Limite superior menor que valor base!');
       }
+      if (isValid.orderCorrect) {
+        console.log('✅ Ordem dos cenários matematicamente correta');
+      } else {
+        console.error('❌ ERRO: Ordem dos cenários incorreta');
+      }
+      
+      return isValid;
     } catch (error) {
       console.error('Erro na validação dos limites:', error);
+      return false;
     }
   };
   
   // Executar validação
-  validateLimits();
+  const validationResult = validateLimits();
   
   // Função para gerar cores com transição suave baseada na idade de aposentadoria
   const generateColorsWithTransition = (values: number[], retirementAge: number, currentAge: number) => {
@@ -212,8 +193,6 @@ const ProjectionChart: React.FC<ProjectionChartProps> = ({ userData, data, uncer
   const finalWealth = projectionData.values[projectionData.values.length - 1];
   const monthlyIncome = finalWealth * 0.005; // 0.5% ao mês
   const yearsToRetirement = userData.retirementAge - userData.currentAge;
-  
-
 
   // Verificar se há incertezas configuradas
   const hasUncertainties = (uncertaintyData && (
@@ -222,113 +201,107 @@ const ProjectionChart: React.FC<ProjectionChartProps> = ({ userData, data, uncer
     uncertaintyData.extraIncome > 0 ||
     uncertaintyData.monthlyBenefit > 0
   ));
-  
 
-  
-
-
-    // Criar datasets segmentados para cores contínuas
-    const createSegmentedDatasets = () => {
-      const datasets = [];
+  // Criar datasets segmentados para cores contínuas
+  const createSegmentedDatasets = () => {
+    const datasets = [];
+    
+    // Área sombreada primeiro (se há incertezas)
+    if (hasUncertainties) {
+      datasets.push({
+        label: 'Limite Inferior',
+        data: projectionData.pessimisticValues,
+        borderColor: 'rgba(239, 68, 68, 0.5)',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        fill: false,
+        tension: 0.4,
+        pointRadius: 0,
+        borderWidth: 2,
+        borderDash: [5, 5],
+      }, {
+        label: 'Limite Superior',
+        data: projectionData.optimisticValues,
+        borderColor: 'rgba(34, 197, 94, 0.5)',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        fill: '-1',
+        tension: 0.4,
+        pointRadius: 0,
+        borderWidth: 2,
+        borderDash: [5, 5],
+      });
+    }
+    
+    // Dividir dados em segmentos contínuos por cor
+    let currentSegment: { values: number[], ages: number[], color: string } | null = null;
+    const segments: { values: number[], ages: number[], color: string }[] = [];
+    
+    projectionData.values.forEach((value, index) => {
+      const age = userData.currentAge + index;
+      const isNegative = value < 0;
       
-      // Área sombreada primeiro (se há incertezas)
-      if (hasUncertainties) {
-        datasets.push({
-          label: 'Limite Inferior',
-          data: projectionData.pessimisticValues,
-          borderColor: 'rgba(239, 68, 68, 0.5)',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          fill: false,
-          tension: 0.4,
-          pointRadius: 0,
-          borderWidth: 2,
-          borderDash: [5, 5],
-        }, {
-          label: 'Limite Superior',
-          data: projectionData.optimisticValues,
-          borderColor: 'rgba(34, 197, 94, 0.5)',
-          backgroundColor: 'rgba(34, 197, 94, 0.1)',
-          fill: '-1',
-          tension: 0.4,
-          pointRadius: 0,
-          borderWidth: 2,
-          borderDash: [5, 5],
-        });
+      // Determinar cor baseada na mesma lógica da tabela
+      let color: string;
+      if (isNegative) {
+        color = 'rgb(220, 38, 38)'; // red-600
+      } else if (age >= userData.retirementAge) {
+        color = 'rgb(37, 99, 235)'; // blue-600
+      } else {
+        color = 'rgb(13, 148, 136)'; // teal-600
       }
       
-      // Dividir dados em segmentos contínuos por cor
-      let currentSegment: { values: number[], ages: number[], color: string } | null = null;
-      const segments: { values: number[], ages: number[], color: string }[] = [];
-      
-      projectionData.values.forEach((value, index) => {
-        const age = userData.currentAge + index;
-        const isNegative = value < 0;
-        
-        // Determinar cor baseada na mesma lógica da tabela
-        let color: string;
-        if (isNegative) {
-          color = 'rgb(220, 38, 38)'; // red-600
-        } else if (age >= userData.retirementAge) {
-          color = 'rgb(37, 99, 235)'; // blue-600
-        } else {
-          color = 'rgb(13, 148, 136)'; // teal-600
+      // Se é o primeiro ponto ou a cor mudou, criar novo segmento
+      if (!currentSegment || currentSegment.color !== color) {
+        if (currentSegment) {
+          segments.push(currentSegment);
         }
-        
-        // Se é o primeiro ponto ou a cor mudou, criar novo segmento
-        if (!currentSegment || currentSegment.color !== color) {
-          if (currentSegment) {
-            segments.push(currentSegment);
-          }
-          currentSegment = { values: [value], ages: [age], color };
-        } else {
-          // Adicionar ao segmento atual
-          currentSegment.values.push(value);
-          currentSegment.ages.push(age);
+        currentSegment = { values: [value], ages: [age], color };
+      } else {
+        // Adicionar ao segmento atual
+        currentSegment.values.push(value);
+        currentSegment.ages.push(age);
+      }
+    });
+    
+    // Adicionar o último segmento
+    if (currentSegment) {
+      segments.push(currentSegment);
+    }
+    
+    // Criar datasets para cada segmento
+    segments.forEach((segment, index) => {
+      // Criar array de dados com nulls para conectar segmentos
+      const dataWithNulls = new Array(projectionData.values.length).fill(null);
+      
+      // Preencher apenas os valores do segmento atual
+      segment.ages.forEach((age, ageIndex) => {
+        const dataIndex = age - userData.currentAge;
+        if (dataIndex >= 0 && dataIndex < dataWithNulls.length) {
+          dataWithNulls[dataIndex] = segment.values[ageIndex];
         }
       });
       
-      // Adicionar o último segmento
-      if (currentSegment) {
-        segments.push(currentSegment);
-      }
-      
-      // Criar datasets para cada segmento
-      segments.forEach((segment, index) => {
-        // Criar array de dados com nulls para conectar segmentos
-        const dataWithNulls = new Array(projectionData.values.length).fill(null);
-        
-        // Preencher apenas os valores do segmento atual
-        segment.ages.forEach((age, ageIndex) => {
-          const dataIndex = age - userData.currentAge;
-          if (dataIndex >= 0 && dataIndex < dataWithNulls.length) {
-            dataWithNulls[dataIndex] = segment.values[ageIndex];
-          }
-        });
-        
-        datasets.push({
-          label: index === 0 ? 'Saldo Acumulado' : '',
-          data: dataWithNulls,
-          borderColor: segment.color,
-          backgroundColor: 'transparent',
-          fill: false,
-          tension: 0.4,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          borderWidth: 3,
-          pointBackgroundColor: segment.color,
-          pointBorderColor: segment.color,
-        });
+      datasets.push({
+        label: index === 0 ? 'Saldo Acumulado' : '',
+        data: dataWithNulls,
+        borderColor: segment.color,
+        backgroundColor: 'transparent',
+        fill: false,
+        tension: 0.4,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        borderWidth: 3,
+        pointBackgroundColor: segment.color,
+        pointBorderColor: segment.color,
       });
-      
-      return datasets;
-    };
+    });
+    
+    return datasets;
+  };
 
-    const chartData = {
-      labels: projectionData.years.map(age => `${age} anos`),
-      datasets: createSegmentedDatasets(),
-    };
-  
-
+  const chartData = {
+    labels: projectionData.years.map(age => `${age} anos`),
+    datasets: createSegmentedDatasets(),
+  };
 
   const options = {
     responsive: true,
@@ -418,6 +391,19 @@ const ProjectionChart: React.FC<ProjectionChartProps> = ({ userData, data, uncer
     <div className="bg-white p-8 rounded-lg shadow-lg w-full">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Projeção de Aposentadoria</h2>
+        
+        {/* Indicador de Validação */}
+        {validationResult !== undefined && hasUncertainties && (
+          <div className={`flex items-center space-x-2 px-3 py-1 rounded-md text-sm ${
+            validationResult.orderCorrect 
+              ? 'bg-green-100 text-green-700' 
+              : 'bg-red-100 text-red-700'
+          }`}>
+            <span>{validationResult.orderCorrect ? '✅' : '❌'}</span>
+            <span>{validationResult.orderCorrect ? 'Cálculos validados' : 'Erro nos cálculos'}</span>
+          </div>
+        )}
+        
         <button
           onClick={() => {
             // Resetar todos os valores para os padrões
