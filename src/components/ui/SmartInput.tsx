@@ -9,6 +9,7 @@ interface SmartInputProps extends SmartInputOptions {
   disabled?: boolean;
   required?: boolean;
   error?: string;
+  tooltip?: string;
 }
 
 const SmartInput: React.FC<SmartInputProps> = ({
@@ -21,6 +22,7 @@ const SmartInput: React.FC<SmartInputProps> = ({
   disabled = false,
   required = false,
   error,
+  tooltip,
   autoAdvance = true,
   min,
   max,
@@ -28,6 +30,7 @@ const SmartInput: React.FC<SmartInputProps> = ({
 }) => {
   const [focused, setFocused] = useState(false);
   const [displayValue, setDisplayValue] = useState(value.toString());
+  const [showTooltip, setShowTooltip] = useState(false);
   const { inputRef, handleFocus, handleKeyDown, validateValue } = useSmartInput({
     type,
     autoAdvance,
@@ -130,8 +133,33 @@ const SmartInput: React.FC<SmartInputProps> = ({
   return (
     <div className="relative">
       <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        <div className="flex items-center">
+          <span>{label}</span>
+          {required && <span className="text-red-500 ml-1">*</span>}
+          {tooltip && (
+            <div className="relative ml-2">
+              <div
+                className="w-4 h-4 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center cursor-help"
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+              >
+                i
+              </div>
+              {showTooltip && (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-50 w-80">
+                  <div className="text-left">
+                    {tooltip?.split('\n').map((line, index) => (
+                      <div key={index} className={index > 0 ? 'mt-1' : ''}>
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </label>
       
       <div className="relative">

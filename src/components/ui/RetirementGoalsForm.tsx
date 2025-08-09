@@ -62,23 +62,17 @@ const RetirementGoalsForm: React.FC<RetirementGoalsFormProps> = ({ userData, onU
           min={0}
         />
         
-        <div className="relative">
-          <SmartInput
-            type="percentage"
-            label="Rentabilidade Real (% a.a.)"
-            value={userData.realReturnRate}
-            onChange={(value) => handleChange('realReturnRate', value)}
-            placeholder="Ex: 6,5"
-            min={0}
-            max={30}
-            required
-          />
-          <div className="mt-1 text-xs text-gray-500 bg-blue-50 p-2 rounded border border-blue-200">
-            💡 <strong>Auto-preenchido:</strong> {cdiInfo.description}
-            <br />
-            <span className="text-blue-600">Baseado em CDI 100% descontando inflação estimada</span>
-          </div>
-        </div>
+        <SmartInput
+          type="percentage"
+          label="Rentabilidade Real (% a.a.)"
+          value={userData.realReturnRate}
+          onChange={(value) => handleChange('realReturnRate', value)}
+          placeholder="Ex: 6,5"
+          min={0}
+          max={30}
+          required
+          tooltip={`💡 Auto-preenchido: ${cdiInfo.description}\nBaseado em CDI 100% descontando inflação estimada`}
+        />
       </form>
     </div>
   );
