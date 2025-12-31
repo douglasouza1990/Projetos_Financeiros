@@ -49,7 +49,43 @@ const buildSheetApiUrl = (url: string) => {
   if (!sheetId) {
     return '';
   }
-  return `https://opensheet.elk.sh/${sheetId}/${sheetTab}`;
+  const params = new URLSearchParams({
+    tqx: 'out:json',
+    sheet: sheetTab
+  });
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?${params.toString()}`;
+};
+
+const normalizeHeader = (value: string) => value.trim().toLowerCase();
+
+const mapRowToUser = (headers: string[], row: Array<{ v?: string }>) => {
+  const record: Record<string, string> = {};
+  headers.forEach((header, index) => {
+    record[normalizeHeader(header)] = row[index]?.v?.toString().trim() ?? '';
+  });
+  return {
+    id: record.id || `u-${record.email || Math.random().toString(36).slice(2, 7)}`,
+    name: record.nome || record.name || '',
+    email: record.email || '',
+    status: (record.status || record.status_usuario || 'active') as UserRecord['status'],
+    role: (record.role || record.perfil || 'user') as UserRecord['role'],
+    password: record.password || record.senha || 'inteliger2024'
+  } as UserRecord;
+};
+
+const parseGvizResponse = (text: string) => {
+  const match = text.match(/google\\.visualization\\.Query\\.setResponse\\((.*)\\);/s);
+  if (!match) {
+    throw new Error('Resposta inesperada da planilha.');
+  }
+  const json = JSON.parse(match[1]);
+  const headers = json.table.cols.map((col: { label: string }) => col.label);
+  const rows = json.table.rows.map((row: { c: Array<{ v?: string } | null> }) =>
+    row.c.map(cell => cell ?? { v: '' })
+  );
+  return rows
+    .map((row: Array<{ v?: string }>) => mapRowToUser(headers, row))
+    .filter(user => user.email);
 };
 
 function App() {
@@ -88,11 +124,12 @@ function App() {
       if (!response.ok) {
         throw new Error(`Falha ao buscar dados do Google Sheets (HTTP ${response.status}).`);
       }
-      const data = (await response.json()) as UserRecord[];
-      if (!Array.isArray(data) || data.length === 0) {
+      const text = await response.text();
+      const parsedUsers = parseGvizResponse(text);
+      if (!Array.isArray(parsedUsers) || parsedUsers.length === 0) {
         throw new Error('Planilha retornou dados inválidos.');
       }
-      setUsers(data);
+      setUsers(parsedUsers);
       setSheetStatus('Base sincronizada com sucesso.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro desconhecido ao sincronizar.';
@@ -422,7 +459,7 @@ function App() {
               <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Passos rápidos</p>
                 <ol className="mt-3 space-y-2 text-slate-200">
-                  <li>1. Compartilhe a planilha para leitura pública.</li>
+                  <li>1. Publique a planilha na web com acesso público.</li>
                   <li>
                     2. Garanta que a guia se chame <strong>{sheetTab}</strong>.
                   </li>
