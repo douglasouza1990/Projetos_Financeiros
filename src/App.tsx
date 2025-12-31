@@ -37,12 +37,27 @@ const sheetUsers: UserRecord[] = [
 ];
 
 const sheetsUrl = import.meta.env.VITE_SHEETS_URL as string | undefined;
+const sheetTab = 'base';
+
+const extractSheetId = (url: string) => {
+  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  return match?.[1] ?? '';
+};
+
+const buildSheetApiUrl = (url: string) => {
+  const sheetId = extractSheetId(url);
+  if (!sheetId) {
+    return '';
+  }
+  return `https://opensheet.elk.sh/${sheetId}/${sheetTab}`;
+};
 
 function App() {
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [users, setUsers] = useState<UserRecord[]>(sheetUsers);
   const [sheetStatus, setSheetStatus] = useState('Base carregada localmente.');
   const [isSyncing, setIsSyncing] = useState(false);
+  const [sheetInputUrl, setSheetInputUrl] = useState(sheetsUrl ?? '');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -54,8 +69,14 @@ function App() {
   const isAdmin = currentUser?.role === 'admin';
 
   const syncSheetUsers = async () => {
-    if (!sheetsUrl) {
-      setSheetStatus('Configure VITE_SHEETS_URL para sincronizar com o Google Sheets.');
+    if (!sheetInputUrl) {
+      setSheetStatus('Informe a URL da planilha para sincronizar.');
+      return;
+    }
+
+    const apiUrl = buildSheetApiUrl(sheetInputUrl);
+    if (!apiUrl) {
+      setSheetStatus('URL inválida. Verifique o link da planilha.');
       return;
     }
 
@@ -63,7 +84,7 @@ function App() {
     setSheetStatus('Sincronizando com o Google Sheets...');
 
     try {
-      const response = await fetch(sheetsUrl);
+      const response = await fetch(apiUrl);
       if (!response.ok) {
         throw new Error('Falha ao buscar dados do Google Sheets.');
       }
@@ -81,8 +102,12 @@ function App() {
   };
 
   useEffect(() => {
-    void syncSheetUsers();
-  }, []);
+    if (sheetsUrl) {
+      void syncSheetUsers();
+    } else {
+      setSheetStatus('Informe a URL da planilha para sincronizar.');
+    }
+  }, [sheetsUrl]);
 
   const adminUsers = useMemo(() => users.filter(user => user.role === 'admin'), [users]);
 
@@ -362,13 +387,23 @@ function App() {
                   Endpoint atual
                 </p>
                 <p className="mt-2 break-words text-slate-100">
-                  {sheetsUrl || 'Nenhuma URL configurada.'}
+                  {sheetInputUrl || 'Nenhuma URL configurada.'}
                 </p>
               </div>
 
               <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Status</p>
                 <p className="mt-2 text-slate-100">{sheetStatus}</p>
+                <label className="mt-4 block text-sm text-slate-300">
+                  URL do Google Sheets
+                  <input
+                    value={sheetInputUrl}
+                    onChange={event => setSheetInputUrl(event.target.value)}
+                    type="url"
+                    placeholder="https://docs.google.com/spreadsheets/d/..."
+                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-white placeholder:text-slate-500"
+                  />
+                </label>
                 <button
                   type="button"
                   onClick={syncSheetUsers}
@@ -382,9 +417,12 @@ function App() {
               <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Passos rápidos</p>
                 <ol className="mt-3 space-y-2 text-slate-200">
-                  <li>1. Gere o endpoint JSON da planilha no Google Sheets.</li>
-                  <li>2. Configure a variável <strong>VITE_SHEETS_URL</strong> no ambiente.</li>
-                  <li>3. Clique em “Testar conexão” para validar a integração.</li>
+                  <li>1. Compartilhe a planilha para leitura pública.</li>
+                  <li>
+                    2. Garanta que a guia se chame <strong>{sheetTab}</strong>.
+                  </li>
+                  <li>3. Cole a URL completa da planilha acima.</li>
+                  <li>4. Clique em “Testar conexão” para validar a integração.</li>
                 </ol>
               </div>
             </div>
