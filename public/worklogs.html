@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Worklogs - Google Sheets</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f7f7f7;
+      }
+
+      h1 {
+        margin-bottom: 5px;
+      }
+
+      p {
+        color: #555;
+        margin-bottom: 20px;
+      }
+
+      .erro {
+        background: #ffe5e5;
+        color: #900;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        background: #fff;
+      }
+
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        font-size: 14px;
+      }
+
+      th {
+        background: #f0f0f0;
+        text-align: left;
+      }
+
+      tr:nth-child(even) {
+        background: #fafafa;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Worklogs - Google Sheets</h1>
+    <p>Dados carregados diretamente da guia <b>Base</b> do Google Sheets.</p>
+
+    <div id="erro"></div>
+    <div id="conteudo">Carregando dados...</div>
+
+    <script>
+      const API_URL =
+        "https://docs.google.com/spreadsheets/d/1b57oEuu4tzVrsuCYMHA3naGqHkKR_dKhQZqRVwHzMx4/gviz/tq?tqx=out:json&sheet=base";
+
+      const status = document.createElement("p");
+      status.innerText = "Carregando dados...";
+      document.body.appendChild(status);
+
+      function parseGViz(text) {
+        const start = text.indexOf("{");
+        const end = text.lastIndexOf("}");
+        return JSON.parse(text.substring(start, end + 1));
+      }
+
+      fetch(API_URL)
+        .then(res => res.text())
+        .then(text => {
+          const data = parseGViz(text);
+
+          const cols = data.table.cols.map(c => c.label || "");
+          const rows = data.table.rows.map(r =>
+            r.c.map(c => (c && c.f) ? c.f : (c ? c.v : ""))
+          );
+
+          let html = "<table border='1' cellpadding='6'><thead><tr>";
+          cols.forEach(col => html += `<th>${col}</th>`);
+          html += "</tr></thead><tbody>";
+
+          rows.forEach(row => {
+            html += "<tr>";
+            row.forEach(cell => html += `<td>${cell ?? ""}</td>`);
+            html += "</tr>";
+          });
+
+          html += "</tbody></table>";
+
+          status.remove();
+          document.body.appendChild(
+            document.createRange().createContextualFragment(html)
+          );
+        })
+        .catch(err => {
+          status.innerHTML =
+            "<span style='color:red'>Erro ao carregar dados do Google Sheets</span>";
+          console.error(err);
+        });
+    </script>
+  </body>
+</html>
