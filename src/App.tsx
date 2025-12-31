@@ -86,7 +86,7 @@ function App() {
     try {
       const response = await fetch(apiUrl);
       if (!response.ok) {
-        throw new Error('Falha ao buscar dados do Google Sheets.');
+        throw new Error(`Falha ao buscar dados do Google Sheets (HTTP ${response.status}).`);
       }
       const data = (await response.json()) as UserRecord[];
       if (!Array.isArray(data) || data.length === 0) {
@@ -95,7 +95,8 @@ function App() {
       setUsers(data);
       setSheetStatus('Base sincronizada com sucesso.');
     } catch (error) {
-      setSheetStatus('Não foi possível sincronizar. Mantendo base local.');
+      const message = error instanceof Error ? error.message : 'Erro desconhecido ao sincronizar.';
+      setSheetStatus(`Não foi possível sincronizar. ${message}`);
     } finally {
       setIsSyncing(false);
     }
@@ -388,6 +389,10 @@ function App() {
                 </p>
                 <p className="mt-2 break-words text-slate-100">
                   {sheetInputUrl || 'Nenhuma URL configurada.'}
+                </p>
+                <p className="mt-3 text-xs text-slate-400">Endpoint gerado</p>
+                <p className="mt-1 break-words text-xs text-slate-200">
+                  {sheetInputUrl ? buildSheetApiUrl(sheetInputUrl) || 'URL inválida.' : '—'}
                 </p>
               </div>
 
