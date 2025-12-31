@@ -44,16 +44,36 @@ const extractSheetId = (url: string) => {
   return match?.[1] ?? '';
 };
 
-const buildSheetApiUrl = (url: string) => {
-  const sheetId = extractSheetId(url);
-  if (!sheetId) {
+const extractSheetGid = (url: string) => {
+  try {
+    const parsed = new URL(url);
+    return parsed.searchParams.get('gid') ?? '';
+  } catch (error) {
     return '';
   }
+};
+
+const buildSheetApiInfo = (url: string) => {
+  const sheetId = extractSheetId(url);
+  if (!sheetId) {
+    return { url: '', mode: '' };
+  }
+  const gid = extractSheetGid(url);
   const params = new URLSearchParams({
-    tqx: 'out:json',
-    sheet: sheetTab
+    tqx: 'out:json'
   });
-  return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?${params.toString()}`;
+  if (gid) {
+    params.set('gid', gid);
+    return {
+      url: `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?${params.toString()}`,
+      mode: `gid=${gid}`
+    };
+  }
+  params.set('sheet', sheetTab);
+  return {
+    url: `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?${params.toString()}`,
+    mode: `guia=${sheetTab}`
+  };
 };
 
 const normalizeHeader = (value: string) => value.trim().toLowerCase();
@@ -88,7 +108,7 @@ const parseGvizResponse = (text: string) => {
     .filter(user => user.email);
 };
 
-const suggestSheetFix = (status: number | undefined, body: string) => {
+const suggestSheetFix = (status: number | undefined, body: string, mode: string) => {
   if (status === 403) {
     return 'Sugestão: torne a planilha pública ou use “Publicar na web” nas configurações do Google Sheets.';
   }
@@ -96,15 +116,19 @@ const suggestSheetFix = (status: number | undefined, body: string) => {
     return 'Sugestão: confirme se a URL da planilha está correta e acessível.';
   }
   if (status === 400) {
-    return 'Sugestão: confirme se a guia se chama “base” e se a planilha está publicada na web.';
+    return 'Sugestão: confirme se a guia se chama “base” (respeitando maiúsculas) e se a planilha está publicada na web.';
   }
-  if (body.toLowerCase().includes('access denied')) {
+  const lowerBody = body.toLowerCase();
+  if (lowerBody.includes('access denied')) {
     return 'Sugestão: verifique as permissões de compartilhamento da planilha.';
   }
-  if (body.toLowerCase().includes('google visualization')) {
+  if (lowerBody.includes('google visualization')) {
     return 'Sugestão: publique a planilha na web para habilitar o acesso via GViz.';
   }
-  return 'Sugestão: verifique se a planilha está publicada na web e a guia “base” existe.';
+  if (lowerBody.includes('requested entity was not found') || lowerBody.includes('sheet not found')) {
+    return 'Sugestão: confirme se a guia está exatamente como “base” ou copie a URL com o parâmetro gid da guia correta.';
+  }
+  return `Sugestão: verifique se a planilha está publicada na web e a guia “base” existe. (Modo atual: ${mode || 'guia base'})`;
 };
 
 function App() {
@@ -130,8 +154,8 @@ function App() {
       return;
     }
 
-    const apiUrl = buildSheetApiUrl(sheetInputUrl);
-    if (!apiUrl) {
+    const apiInfo = buildSheetApiInfo(sheetInputUrl);
+    if (!apiInfo.url) {
       setSheetStatus('URL inválida. Verifique o link da planilha.');
       return;
     }
@@ -144,7 +168,7 @@ function App() {
     let lastBody = '';
 
     try {
-      const response = await fetch(apiUrl);
+      const response = await fetch(apiInfo.url);
       lastStatus = response.status;
       lastBody = await response.text();
       if (!response.ok) {
@@ -163,7 +187,7 @@ function App() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro desconhecido ao sincronizar.';
       setSheetStatus(`Não foi possível sincronizar. ${message}`);
-      setSheetSuggestion(suggestSheetFix(lastStatus, lastBody));
+      setSheetSuggestion(suggestSheetFix(lastStatus, lastBody, apiInfo.mode));
     } finally {
       setIsSyncing(false);
     }
@@ -459,8 +483,13 @@ function App() {
                 </p>
                 <p className="mt-3 text-xs text-slate-400">Endpoint gerado</p>
                 <p className="mt-1 break-words text-xs text-slate-200">
-                  {sheetInputUrl ? buildSheetApiUrl(sheetInputUrl) || 'URL inválida.' : '—'}
+                  {sheetInputUrl ? buildSheetApiInfo(sheetInputUrl).url || 'URL inválida.' : '—'}
                 </p>
+                {sheetInputUrl && buildSheetApiInfo(sheetInputUrl).mode ? (
+                  <p className="mt-2 text-[11px] text-slate-400">
+                    Modo de leitura: {buildSheetApiInfo(sheetInputUrl).mode}
+                  </p>
+                ) : null}
               </div>
 
               <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
