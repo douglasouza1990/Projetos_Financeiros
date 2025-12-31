@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import type { TimeEntry, UserRecord } from './types';
+import type { UserRecord } from './types';
 
 const sheetUsers: UserRecord[] = [
   {
@@ -38,44 +38,9 @@ const sheetUsers: UserRecord[] = [
 
 const sheetsUrl = import.meta.env.VITE_SHEETS_URL as string | undefined;
 
-const initialEntries: TimeEntry[] = [
-  {
-    id: 't-100',
-    userId: 'u-1',
-    date: '2024-10-14',
-    project: 'Portal Cliente',
-    hours: 7.5,
-    description: 'Ajustes no fluxo de onboarding.'
-  },
-  {
-    id: 't-101',
-    userId: 'u-2',
-    date: '2024-10-14',
-    project: 'Integrações ERP',
-    hours: 6,
-    description: 'Mapeamento de eventos e testes de carga.'
-  },
-  {
-    id: 't-102',
-    userId: 'u-3',
-    date: '2024-10-13',
-    project: 'Gestão de Horas',
-    hours: 5,
-    description: 'Revisão do backlog e priorização.'
-  }
-];
-
-const formatHours = (value: number) => value.toFixed(1).replace('.', ',');
-
-const parseDate = (value: string) => {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, month - 1, day);
-};
-
 function App() {
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [users, setUsers] = useState<UserRecord[]>(sheetUsers);
-  const [entries, setEntries] = useState<TimeEntry[]>(initialEntries);
   const [sheetStatus, setSheetStatus] = useState('Base carregada localmente.');
   const [isSyncing, setIsSyncing] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
@@ -85,12 +50,6 @@ function App() {
   const [resetMessage, setResetMessage] = useState('');
   const [showReset, setShowReset] = useState(false);
   const [filterUserId, setFilterUserId] = useState('all');
-  const [newEntry, setNewEntry] = useState({
-    date: new Date().toISOString().split('T')[0],
-    project: '',
-    hours: 0,
-    description: ''
-  });
 
   const isAdmin = currentUser?.role === 'admin';
 
@@ -125,40 +84,7 @@ function App() {
     void syncSheetUsers();
   }, []);
 
-  const visibleEntries = useMemo(() => {
-    if (!currentUser) {
-      return [];
-    }
-    if (isAdmin) {
-      return filterUserId === 'all'
-        ? entries
-        : entries.filter(entry => entry.userId === filterUserId);
-    }
-    return entries.filter(entry => entry.userId === currentUser.id);
-  }, [currentUser, entries, filterUserId, isAdmin]);
-
-  const totalHours = useMemo(() => {
-    return visibleEntries.reduce((acc, entry) => acc + entry.hours, 0);
-  }, [visibleEntries]);
-
-  const weeklyHours = useMemo(() => {
-    const now = new Date();
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - 6);
-    return visibleEntries
-      .filter(entry => parseDate(entry.date) >= weekStart)
-      .reduce((acc, entry) => acc + entry.hours, 0);
-  }, [visibleEntries]);
-
-  const monthlyHours = useMemo(() => {
-    const now = new Date();
-    return visibleEntries
-      .filter(entry => {
-        const date = parseDate(entry.date);
-        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-      })
-      .reduce((acc, entry) => acc + entry.hours, 0);
-  }, [visibleEntries]);
+  const adminUsers = useMemo(() => users.filter(user => user.role === 'admin'), [users]);
 
   const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
@@ -199,32 +125,6 @@ function App() {
     }
 
     setResetMessage('Enviamos um link de redefinição para o email informado.');
-  };
-
-  const handleAddEntry = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!currentUser) {
-      return;
-    }
-
-    setEntries(prev => [
-      {
-        id: `t-${prev.length + 200}`,
-        userId: currentUser.id,
-        date: newEntry.date,
-        project: newEntry.project,
-        hours: Number(newEntry.hours),
-        description: newEntry.description
-      },
-      ...prev
-    ]);
-
-    setNewEntry({
-      date: new Date().toISOString().split('T')[0],
-      project: '',
-      hours: 0,
-      description: ''
-    });
   };
 
   const handleLogout = () => {
@@ -451,219 +351,60 @@ function App() {
       <main className="mx-auto max-w-6xl space-y-8 px-6 py-10">
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-            <h2 className="text-lg font-semibold">Novo apontamento</h2>
+            <h2 className="text-lg font-semibold">Conexão com Google Sheets</h2>
             <p className="text-sm text-slate-300">
-              Registre rapidamente o esforço diário para manter o acompanhamento atualizado.
+              Configure a integração para sincronizar automaticamente usuários e apontamentos.
             </p>
 
-            <form onSubmit={handleAddEntry} className="mt-6 space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="block text-sm text-slate-300">
-                  Data
-                  <input
-                    value={newEntry.date}
-                    onChange={event => setNewEntry(prev => ({ ...prev, date: event.target.value }))}
-                    type="date"
-                    required
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-white"
-                  />
-                </label>
-                <label className="block text-sm text-slate-300">
-                  Horas trabalhadas
-                  <input
-                    value={newEntry.hours}
-                    onChange={event => setNewEntry(prev => ({ ...prev, hours: Number(event.target.value) }))}
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    required
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-white"
-                  />
-                </label>
+            <div className="mt-6 space-y-4">
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                  Endpoint atual
+                </p>
+                <p className="mt-2 break-words text-slate-100">
+                  {sheetsUrl || 'Nenhuma URL configurada.'}
+                </p>
               </div>
 
-              <label className="block text-sm text-slate-300">
-                Projeto
-                <input
-                  value={newEntry.project}
-                  onChange={event => setNewEntry(prev => ({ ...prev, project: event.target.value }))}
-                  type="text"
-                  required
-                  placeholder="Projeto ou squad"
-                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-white placeholder:text-slate-500"
-                />
-              </label>
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Status</p>
+                <p className="mt-2 text-slate-100">{sheetStatus}</p>
+                <button
+                  type="button"
+                  onClick={syncSheetUsers}
+                  disabled={isSyncing}
+                  className="mt-4 w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSyncing ? 'Sincronizando...' : 'Testar conexão'}
+                </button>
+              </div>
 
-              <label className="block text-sm text-slate-300">
-                Descrição
-                <textarea
-                  value={newEntry.description}
-                  onChange={event => setNewEntry(prev => ({ ...prev, description: event.target.value }))}
-                  required
-                  rows={3}
-                  placeholder="Atividades realizadas"
-                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-white placeholder:text-slate-500"
-                />
-              </label>
-
-              <button
-                type="submit"
-                className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-base font-semibold text-slate-950 transition hover:bg-emerald-400"
-              >
-                Salvar apontamento
-              </button>
-            </form>
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Passos rápidos</p>
+                <ol className="mt-3 space-y-2 text-slate-200">
+                  <li>1. Gere o endpoint JSON da planilha no Google Sheets.</li>
+                  <li>2. Configure a variável <strong>VITE_SHEETS_URL</strong> no ambiente.</li>
+                  <li>3. Clique em “Testar conexão” para validar a integração.</li>
+                </ol>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-6">
             <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-              <h2 className="text-lg font-semibold">Resumo</h2>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Últimos 7 dias
-                  </p>
-                  <p className="mt-2 text-3xl font-semibold text-white">
-                    {formatHours(weeklyHours)}h
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    Mês atual
-                  </p>
-                  <p className="mt-2 text-3xl font-semibold text-white">
-                    {formatHours(monthlyHours)}h
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 sm:col-span-2">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Total visível</p>
-                  <p className="mt-2 text-3xl font-semibold text-white">
-                    {formatHours(totalHours)}h
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {isAdmin ? (
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-                <h2 className="text-lg font-semibold">Filtros administrativos</h2>
-                <p className="text-sm text-slate-300">
-                  Acompanhe o desempenho individual ou global.
-                </p>
-                <label className="mt-4 block text-sm text-slate-300">
-                  Filtrar por usuário
-                  <select
-                    value={filterUserId}
-                    onChange={event => setFilterUserId(event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-white"
-                  >
-                    <option value="all">Todos os usuários</option>
-                    {users.map(user => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            ) : null}
-          </div>
-        </section>
-
-        <section className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">Apontamentos registrados</h2>
+              <h2 className="text-lg font-semibold">Usuários sincronizados</h2>
               <p className="text-sm text-slate-300">
-                {isAdmin
-                  ? 'Visão consolidada para administração e controle.'
-                  : 'Somente seus registros aparecem aqui.'}
-              </p>
-            </div>
-            <span className="rounded-full border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-300">
-              {visibleEntries.length} registros
-            </span>
-          </div>
-
-          <div className="mt-6 overflow-hidden rounded-2xl border border-slate-800">
-            <table className="min-w-full divide-y divide-slate-800 text-sm">
-              <thead className="bg-slate-950/70 text-left text-xs uppercase tracking-[0.2em] text-slate-400">
-                <tr>
-                  <th className="px-4 py-3">Data</th>
-                  <th className="px-4 py-3">Projeto</th>
-                  <th className="px-4 py-3">Horas</th>
-                  <th className="px-4 py-3">Descrição</th>
-                  {isAdmin ? <th className="px-4 py-3">Usuário</th> : null}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {visibleEntries.map(entry => {
-                  const user = users.find(item => item.id === entry.userId);
-                  return (
-                    <tr key={entry.id} className="bg-slate-950/40">
-                      <td className="px-4 py-3 text-slate-200">{entry.date}</td>
-                      <td className="px-4 py-3 text-slate-100">{entry.project}</td>
-                      <td className="px-4 py-3 text-slate-100">{formatHours(entry.hours)}h</td>
-                      <td className="px-4 py-3 text-slate-300">{entry.description}</td>
-                      {isAdmin ? (
-                        <td className="px-4 py-3 text-slate-200">{user?.name ?? '—'}</td>
-                      ) : null}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {isAdmin ? (
-          <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-              <h2 className="text-lg font-semibold">Dashboard global</h2>
-              <p className="text-sm text-slate-300">
-                Consolidação automática de esforço por desenvolvedor.
-              </p>
-              <div className="mt-5 space-y-4">
-                {users.map(user => {
-                  const userHours = entries
-                    .filter(entry => entry.userId === user.id)
-                    .reduce((acc, entry) => acc + entry.hours, 0);
-
-                  return (
-                    <div
-                      key={user.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-4"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-white">{user.name}</p>
-                        <p className="text-xs text-slate-400">{user.email}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Total</p>
-                        <p className="text-lg font-semibold text-emerald-300">
-                          {formatHours(userHours)}h
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-              <h2 className="text-lg font-semibold">Gestão de acessos</h2>
-              <p className="text-sm text-slate-300">
-                Usuários liberados automaticamente via Google Sheets.
+                Visualize a lista carregada diretamente da planilha conectada.
               </p>
               <div className="mt-5 space-y-3">
                 {users.map(user => (
                   <div
                     key={user.id}
-                    className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3"
                   >
                     <div>
                       <p className="text-sm font-semibold text-white">{user.name}</p>
-                      <p className="text-xs text-slate-400">{user.role === 'admin' ? 'Administrador' : 'Desenvolvedor'}</p>
+                      <p className="text-xs text-slate-400">{user.email}</p>
                     </div>
                     <span
                       className={`rounded-full px-3 py-1 text-xs ${
@@ -677,6 +418,78 @@ function App() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {isAdmin ? (
+              <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
+                <h2 className="text-lg font-semibold">Administradores conectados</h2>
+                <p className="text-sm text-slate-300">
+                  Monitore quem possui acesso total aos dashboards globais.
+                </p>
+                <div className="mt-5 space-y-3">
+                  {adminUsers.map(user => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-white">{user.name}</p>
+                        <p className="text-xs text-slate-400">{user.email}</p>
+                      </div>
+                      <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs text-emerald-200">
+                        Administrador
+                      </span>
+                    </div>
+                  ))}
+                  {adminUsers.length === 0 ? (
+                    <p className="text-sm text-slate-400">
+                      Nenhum administrador encontrado na planilha.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </section>
+
+        {isAdmin ? (
+          <section className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold">Gestão de acessos</h2>
+                <p className="text-sm text-slate-300">
+                  Garanta que apenas usuários ativos estejam liberados.
+                </p>
+              </div>
+              <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                Filtrar por status
+                <select
+                  value={filterUserId}
+                  onChange={event => setFilterUserId(event.target.value)}
+                  className="mt-2 block rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-2 text-sm text-white"
+                >
+                  <option value="all">Todos</option>
+                  <option value="active">Ativos</option>
+                  <option value="inactive">Inativos</option>
+                </select>
+              </label>
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {users
+                .filter(user => (filterUserId === 'all' ? true : user.status === filterUserId))
+                .map(user => (
+                  <div
+                    key={user.id}
+                    className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4"
+                  >
+                    <p className="text-sm font-semibold text-white">{user.name}</p>
+                    <p className="text-xs text-slate-400">{user.email}</p>
+                    <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
+                      <span>{user.role === 'admin' ? 'Administrador' : 'Usuário'}</span>
+                      <span>{user.status === 'active' ? 'Ativo' : 'Inativo'}</span>
+                    </div>
+                  </div>
+                ))}
             </div>
           </section>
         ) : null}
