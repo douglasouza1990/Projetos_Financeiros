@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { TimeEntry, UserRecord } from './types';
 
 const sheetUsers: UserRecord[] = [
@@ -35,6 +35,8 @@ const sheetUsers: UserRecord[] = [
     password: 'admin2024'
   }
 ];
+
+const sheetsUrl = import.meta.env.VITE_SHEETS_URL as string | undefined;
 
 const initialEntries: TimeEntry[] = [
   {
@@ -74,6 +76,8 @@ function App() {
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [users, setUsers] = useState<UserRecord[]>(sheetUsers);
   const [entries, setEntries] = useState<TimeEntry[]>(initialEntries);
+  const [sheetStatus, setSheetStatus] = useState('Base carregada localmente.');
+  const [isSyncing, setIsSyncing] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -89,6 +93,37 @@ function App() {
   });
 
   const isAdmin = currentUser?.role === 'admin';
+
+  const syncSheetUsers = async () => {
+    if (!sheetsUrl) {
+      setSheetStatus('Configure VITE_SHEETS_URL para sincronizar com o Google Sheets.');
+      return;
+    }
+
+    setIsSyncing(true);
+    setSheetStatus('Sincronizando com o Google Sheets...');
+
+    try {
+      const response = await fetch(sheetsUrl);
+      if (!response.ok) {
+        throw new Error('Falha ao buscar dados do Google Sheets.');
+      }
+      const data = (await response.json()) as UserRecord[];
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error('Planilha retornou dados inválidos.');
+      }
+      setUsers(data);
+      setSheetStatus('Base sincronizada com sucesso.');
+    } catch (error) {
+      setSheetStatus('Não foi possível sincronizar. Mantendo base local.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  useEffect(() => {
+    void syncSheetUsers();
+  }, []);
 
   const visibleEntries = useMemo(() => {
     if (!currentUser) {
@@ -129,7 +164,7 @@ function App() {
     event.preventDefault();
     setLoginError('');
 
-    const sheetUser = sheetUsers.find(
+    const sheetUser = users.find(
       user => user.email.toLowerCase() === loginEmail.trim().toLowerCase()
     );
 
@@ -148,21 +183,13 @@ function App() {
       return;
     }
 
-    setUsers(prev => {
-      const exists = prev.find(user => user.email === sheetUser.email);
-      if (exists) {
-        return prev;
-      }
-      return [...prev, sheetUser];
-    });
-
     setCurrentUser(sheetUser);
     setLoginPassword('');
   };
 
   const handleResetPassword = (event: React.FormEvent) => {
     event.preventDefault();
-    const sheetUser = sheetUsers.find(
+    const sheetUser = users.find(
       user => user.email.toLowerCase() === resetEmail.trim().toLowerCase()
     );
 
@@ -296,7 +323,7 @@ function App() {
                   A base de usuários é criada automaticamente a partir do Google Sheets conectado.
                 </p>
                 <ul className="mt-4 space-y-3 text-sm text-slate-200">
-                  {sheetUsers.map(user => (
+                  {users.map(user => (
                     <li key={user.id} className="flex items-center justify-between">
                       <div>
                         <p className="font-medium text-white">{user.name}</p>
@@ -314,6 +341,17 @@ function App() {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-xs text-slate-300">
+                  <p>{sheetStatus}</p>
+                  <button
+                    type="button"
+                    onClick={syncSheetUsers}
+                    disabled={isSyncing}
+                    className="mt-3 w-full rounded-xl border border-slate-700 px-4 py-2 text-xs uppercase tracking-[0.2em] text-slate-200 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSyncing ? 'Sincronizando...' : 'Sincronizar agora'}
+                  </button>
+                </div>
               </div>
 
               <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-800/40 p-6">
