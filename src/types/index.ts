@@ -1,22 +1,19 @@
-// Tipos para o projeto de aposentadoria
-export interface UserData {
-  currentAge: number;
-  retirementAge: number;
-  initialAccumulation: number;
-  annualContribution: number;
-  realReturnRate: number;
-  monthlyBenefit: number;
-  extraMonthlyIncome: number;
-  initialDate: string;
+export type UserRole = 'admin' | 'user';
+export type UserStatus = 'active' | 'inactive';
+
+export interface UserRecord {
+  id: string;
+  name: string;
+  email: string;
+  status: UserStatus;
+  role: UserRole;
 }
 
-export interface ProjectionData {
-  years: number[];
-  values: number[];
-}
-
-export interface ContributionEntry {
-  year: number;
-  monthlyAmount: number;
-  age: number;
+export interface TimeEntry {
+  id: string;
+  userId: string;
+  date: string;
+  project: string;
+  hours: number;
+  description: string;
 }
