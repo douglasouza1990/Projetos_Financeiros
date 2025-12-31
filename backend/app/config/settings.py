@@ -42,5 +42,3 @@ class Settings:
             service_account_json=service_account_payload,
         )
 
-
-settings = Settings.from_env()

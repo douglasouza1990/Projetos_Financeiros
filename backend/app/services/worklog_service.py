@@ -1,17 +1,18 @@
 from typing import Any, Dict, List
 
-from app.config.settings import settings
+from app.config.settings import Settings
 from app.services.google_sheets import GoogleSheetsClient, GoogleSheetsError
 
 
 class WorklogService:
-    def __init__(self, sheets_client: GoogleSheetsClient) -> None:
+    def __init__(self, sheets_client: GoogleSheetsClient, settings: Settings) -> None:
         self._sheets_client = sheets_client
+        self._settings = settings
 
     def get_worklogs(self) -> List[Dict[str, Any]]:
         values = self._sheets_client.fetch_sheet_values(
-            settings.spreadsheet_id,
-            settings.sheet_name,
+            self._settings.spreadsheet_id,
+            self._settings.sheet_name,
         )
 
         if not values:
@@ -39,6 +40,6 @@ class WorklogServiceError(RuntimeError):
 class WorklogServiceFactory:
     @staticmethod
     def create() -> WorklogService:
+        settings = Settings.from_env()
         client = GoogleSheetsClient(settings.service_account_json)
-        return WorklogService(client)
-
+        return WorklogService(client, settings)
