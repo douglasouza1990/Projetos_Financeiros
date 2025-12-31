@@ -1,75 +1,120 @@
-# Planejador de Aposentadoria
+# Sistema de Worklogs com Google Sheets
 
-Aplicação React para planejamento de aposentadoria com análise de incertezas e projeções financeiras.
+Aplicação web completa (backend + frontend) que consome a guia **"Base"** de um Google Sheets como fonte de dados primária em modo somente leitura.
 
-## 🚀 Como Publicar o Site
+## ✅ Requisitos atendidos
 
-### Opção 1: GitHub Pages (Recomendado)
+- Leitura da guia "Base" via Google Sheets API oficial.
+- Autenticação via Service Account (variáveis de ambiente).
+- Colunas carregadas dinamicamente (sem hardcode).
+- Backend com camadas separadas (config, services, controllers).
+- Frontend com tabela dinâmica, paginação e filtros.
 
-1. **Crie um repositório no GitHub:**
-   - Vá para [github.com](https://github.com)
-   - Clique em "New repository"
-   - Dê um nome ao projeto (ex: "planejador-aposentadoria")
+---
 
-2. **Faça upload do código:**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/SEU_USUARIO/planejador-aposentadoria.git
-   git push -u origin main
-   ```
+## 🔧 Configuração de credenciais do Google
 
-3. **Configure GitHub Pages:**
-   - Vá para Settings > Pages
-   - Source: "GitHub Actions"
-   - O site será publicado automaticamente em: `https://SEU_USUARIO.github.io/planejador-aposentadoria`
+1. Acesse o **Google Cloud Console** e crie um projeto.
+2. Ative a **Google Sheets API**.
+3. Crie uma **Service Account**.
+4. Gere uma **chave JSON** para a Service Account.
+5. Compartilhe a planilha com o e-mail da Service Account com permissão **visualizador**.
 
-### Opção 2: Netlify (Alternativa)
+---
 
-1. **Acesse [netlify.com](https://netlify.com)**
-2. **Faça login com GitHub**
-3. **Clique em "New site from Git"**
-4. **Selecione seu repositório**
-5. **Build settings:**
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-6. **Clique em "Deploy site"**
+## ⚙️ Backend (FastAPI)
 
-### Opção 3: Vercel (Alternativa)
+### 1) Variáveis de ambiente
 
-1. **Acesse [vercel.com](https://vercel.com)**
-2. **Faça login com GitHub**
-3. **Clique em "New Project"**
-4. **Importe seu repositório**
-5. **Clique em "Deploy"**
-
-## 🛠️ Desenvolvimento Local
+Defina as variáveis abaixo (exemplo em `.env`):
 
 ```bash
-# Instalar dependências
-npm install
-
-# Executar em modo desenvolvimento
-npm run dev
-
-# Build para produção
-npm run build
+GOOGLE_SHEETS_SPREADSHEET_ID=1b57oEuu4tzVrsuCYMHA3naGqHkKR_dKhQZqRVwHzMx4
+GOOGLE_SHEETS_SHEET_NAME=Base
+# Escolha UMA das opções abaixo:
+GOOGLE_SERVICE_ACCOUNT_JSON='{"type": "service_account", ... }'
+# ou
+GOOGLE_SERVICE_ACCOUNT_FILE=/caminho/para/service-account.json
 ```
 
-## 📋 Funcionalidades
+### 2) Instalação e execução
 
-- ✅ Cálculo de projeções de aposentadoria
-- ✅ Análise de incertezas (cenários otimista/pessimista)
-- ✅ Formatação de moeda dinâmica
-- ✅ Tabela de contribuições personalizadas
-- ✅ Gráficos interativos
-- ✅ Interface responsiva
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 
-## 🎯 Como Usar
+uvicorn backend.app.main:app --reload
+```
 
-1. **Preencha os dados atuais** (idade, valor inicial, etc.)
-2. **Defina suas metas** (benefício desejado, aportes extras)
-3. **Configure as incertezas** (variações percentuais)
-4. **Visualize as projeções** no gráfico
-5. **Analise os cenários** otimista e pessimista
+A API estará disponível em `http://localhost:8000`.
+
+**Endpoint principal**
+
+```
+GET /worklogs
+```
+
+Retorna:
+
+```json
+{
+  "data": [
+    { "Coluna A": "valor", "Coluna B": "valor" }
+  ]
+}
+```
+
+---
+
+## 💻 Frontend (React + Vite)
+
+### 1) Variáveis de ambiente
+
+Crie um arquivo `.env` na raiz com:
+
+```bash
+VITE_API_URL=http://localhost:8000
+```
+
+### 2) Instalação e execução
+
+```bash
+npm install
+npm run dev
+```
+
+A interface estará disponível em `http://localhost:5173`.
+
+---
+
+## 🧪 Funcionalidades do Frontend
+
+- Tabela dinâmica baseada nas colunas do Sheets
+- Paginação
+- Filtros automáticos (data, autor e projeto quando existirem)
+- Busca textual global
+- Estados de loading e erro
+
+---
+
+## 🗂️ Estrutura do projeto
+
+```
+backend/
+  app/
+    config/
+    services/
+    controllers/
+    main.py
+src/
+  components/
+  services/
+```
+
+---
+
+## ⚠️ Observações
+
+- O sistema **não grava** dados no Google Sheets.
+- O acesso é estritamente somente leitura.
