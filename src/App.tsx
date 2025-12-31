@@ -88,12 +88,32 @@ const parseGvizResponse = (text: string) => {
     .filter(user => user.email);
 };
 
+const suggestSheetFix = (status: number | undefined, body: string) => {
+  if (status === 403) {
+    return 'Sugestão: torne a planilha pública ou use “Publicar na web” nas configurações do Google Sheets.';
+  }
+  if (status === 404) {
+    return 'Sugestão: confirme se a URL da planilha está correta e acessível.';
+  }
+  if (status === 400) {
+    return 'Sugestão: confirme se a guia se chama “base” e se a planilha está publicada na web.';
+  }
+  if (body.toLowerCase().includes('access denied')) {
+    return 'Sugestão: verifique as permissões de compartilhamento da planilha.';
+  }
+  if (body.toLowerCase().includes('google visualization')) {
+    return 'Sugestão: publique a planilha na web para habilitar o acesso via GViz.';
+  }
+  return 'Sugestão: verifique se a planilha está publicada na web e a guia “base” existe.';
+};
+
 function App() {
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [users, setUsers] = useState<UserRecord[]>(sheetUsers);
   const [sheetStatus, setSheetStatus] = useState('Base carregada localmente.');
   const [isSyncing, setIsSyncing] = useState(false);
   const [sheetInputUrl, setSheetInputUrl] = useState(sheetsUrl ?? '');
+  const [sheetSuggestion, setSheetSuggestion] = useState('');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -118,22 +138,32 @@ function App() {
 
     setIsSyncing(true);
     setSheetStatus('Sincronizando com o Google Sheets...');
+    setSheetSuggestion('');
+
+    let lastStatus: number | undefined;
+    let lastBody = '';
 
     try {
       const response = await fetch(apiUrl);
+      lastStatus = response.status;
+      lastBody = await response.text();
       if (!response.ok) {
-        throw new Error(`Falha ao buscar dados do Google Sheets (HTTP ${response.status}).`);
+        throw new Error(
+          `Falha ao buscar dados do Google Sheets (HTTP ${lastStatus}).`
+        );
       }
-      const text = await response.text();
+      const text = lastBody;
       const parsedUsers = parseGvizResponse(text);
       if (!Array.isArray(parsedUsers) || parsedUsers.length === 0) {
         throw new Error('Planilha retornou dados inválidos.');
       }
       setUsers(parsedUsers);
       setSheetStatus('Base sincronizada com sucesso.');
+      setSheetSuggestion('');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro desconhecido ao sincronizar.';
       setSheetStatus(`Não foi possível sincronizar. ${message}`);
+      setSheetSuggestion(suggestSheetFix(lastStatus, lastBody));
     } finally {
       setIsSyncing(false);
     }
@@ -436,6 +466,11 @@ function App() {
               <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Status</p>
                 <p className="mt-2 text-slate-100">{sheetStatus}</p>
+                {sheetSuggestion ? (
+                  <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+                    {sheetSuggestion}
+                  </div>
+                ) : null}
                 <label className="mt-4 block text-sm text-slate-300">
                   URL do Google Sheets
                   <input
