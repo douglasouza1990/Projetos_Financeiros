@@ -7,6 +7,7 @@ export interface UserRecord {
   email: string;
   status: UserStatus;
   role: UserRole;
+  password: string;
 }
 
 export interface TimeEntry {

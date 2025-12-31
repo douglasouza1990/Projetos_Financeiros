@@ -7,21 +7,32 @@ const sheetUsers: UserRecord[] = [
     name: 'Paula Souza',
     email: 'paula.souza@inteliger.com',
     status: 'active',
-    role: 'user'
+    role: 'user',
+    password: 'inteliger2024'
   },
   {
     id: 'u-2',
     name: 'Bruno Lima',
     email: 'bruno.lima@inteliger.com',
     status: 'active',
-    role: 'user'
+    role: 'user',
+    password: 'inteliger2024'
+  },
+  {
+    id: 'u-4',
+    name: 'Douglas P. Souza',
+    email: 'douglasp.souza23@gmail.com',
+    status: 'active',
+    role: 'user',
+    password: 'dp3010190'
   },
   {
     id: 'u-3',
     name: 'Admin Inteliger',
     email: 'admin@inteliger.com',
     status: 'active',
-    role: 'admin'
+    role: 'admin',
+    password: 'admin2024'
   }
 ];
 
@@ -129,6 +140,11 @@ function App() {
 
     if (!loginPassword.trim()) {
       setLoginError('Informe a senha para continuar.');
+      return;
+    }
+
+    if (sheetUser.password !== loginPassword.trim()) {
+      setLoginError('Senha inválida. Tente novamente.');
       return;
     }
 
