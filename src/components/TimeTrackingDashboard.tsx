@@ -106,6 +106,25 @@ const auditEvents = [
   }
 ];
 
+const syncHighlights = [
+  {
+    title: 'Sincronização bidirecional',
+    detail: 'Tudo que muda no sistema reflete na planilha e vice-versa.'
+  },
+  {
+    title: 'Cadastro automático',
+    detail: 'Novos usuários no Sheets ganham acesso imediato.'
+  },
+  {
+    title: 'Registro unificado',
+    detail: 'Apontamentos são controlados diretamente pela planilha oficial.'
+  },
+  {
+    title: 'Monitoramento em tempo real',
+    detail: 'Status de sincronização visível para usuário e ADM.'
+  }
+];
+
 const adminMetrics = [
   {
     label: 'Usuários sem apontar há 2 dias úteis',
@@ -154,7 +173,7 @@ const ranking = [
 
 const tabs = [
   { id: 'autenticacao', label: 'Acesso' },
-  { id: 'apontamentos', label: 'Apontamentos' },
+  { id: 'integracao', label: 'Integração' },
   { id: 'regras', label: 'Regras & E-mails' },
   { id: 'administrador', label: 'Administrador' }
 ] as const;
@@ -162,7 +181,7 @@ const tabs = [
 type TabId = typeof tabs[number]['id'];
 
 const TimeTrackingDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabId>('apontamentos');
+  const [activeTab, setActiveTab] = useState<TabId>('integracao');
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -172,7 +191,7 @@ const TimeTrackingDashboard: React.FC = () => {
             <p className="text-sm font-semibold text-emerald-600">Inteliger • Apontamentos</p>
             <h1 className="text-2xl font-semibold">Controle de horas e produtividade</h1>
             <p className="text-sm text-slate-500 mt-1">
-              Visão individual simplificada e indicadores gerenciais centralizados em um único lugar.
+              Apontamentos centralizados no Google Sheets com leitura rápida para usuários e ADM.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -263,93 +282,76 @@ const TimeTrackingDashboard: React.FC = () => {
           </section>
         )}
 
-        {activeTab === 'apontamentos' && (
-          <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-            <div className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {summaryCards.map(card => (
-                  <div
-                    key={card.label}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-                  >
-                    <p className="text-xs uppercase text-slate-500">{card.label}</p>
-                    <p className="text-2xl font-semibold mt-2">{card.value}</p>
-                    <p className="text-sm text-slate-500 mt-2">{card.detail}</p>
-                    <span className="inline-flex mt-3 items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                      {card.status}
-                    </span>
+        {activeTab === 'integracao' && (
+          <section className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {summaryCards.map(card => (
+                <div
+                  key={card.label}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <p className="text-xs uppercase text-slate-500">{card.label}</p>
+                  <p className="text-2xl font-semibold mt-2">{card.value}</p>
+                  <p className="text-sm text-slate-500 mt-2">{card.detail}</p>
+                  <span className="inline-flex mt-3 items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                    {card.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-semibold">Integração com Google Sheets</h2>
+                <p className="text-sm text-slate-500">
+                  A fonte oficial de usuários e apontamentos está na planilha sincronizada.
+                </p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 p-4">
+                    <p className="text-xs uppercase text-slate-500">Usuários sincronizados</p>
+                    <p className="text-2xl font-semibold mt-2">42</p>
+                    <p className="text-xs text-slate-500">Última atualização: há 15 min</p>
                   </div>
-                ))}
+                  <div className="rounded-xl border border-slate-200 p-4">
+                    <p className="text-xs uppercase text-slate-500">Apontamentos sincronizados</p>
+                    <p className="text-2xl font-semibold mt-2">1.284</p>
+                    <p className="text-xs text-slate-500">Sincronização em tempo real</p>
+                  </div>
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 sm:col-span-2">
+                    <p className="text-sm font-semibold text-emerald-900">Status da sincronização</p>
+                    <p className="text-xs text-emerald-700">
+                      Última coleta concluída com sucesso. Próxima leitura em 10 minutos.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold">Apontar horas</h2>
-                    <p className="text-sm text-slate-500">
-                      Registre seu dia de forma rápida. O total é calculado automaticamente.
-                    </p>
-                  </div>
-                  <span className="text-xs text-emerald-600 font-semibold">Meta diária: 8h</span>
-                </div>
-                <div className="grid gap-4 mt-6 md:grid-cols-2">
-                  <label className="flex flex-col gap-2 text-sm">
-                    Data
-                    <input
-                      type="date"
-                      className="rounded-lg border border-slate-200 px-3 py-2"
-                      defaultValue="2024-09-14"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-2 text-sm">
-                    Horário inicial
-                    <input
-                      type="time"
-                      className="rounded-lg border border-slate-200 px-3 py-2"
-                      defaultValue="09:10"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-2 text-sm">
-                    Horário final
-                    <input
-                      type="time"
-                      className="rounded-lg border border-slate-200 px-3 py-2"
-                      defaultValue="18:15"
-                    />
-                  </label>
-                  <label className="flex flex-col gap-2 text-sm">
-                    Total de horas
-                    <input
-                      type="text"
-                      className="rounded-lg border border-slate-200 px-3 py-2 bg-slate-50"
-                      value="8h 45m"
-                      readOnly
-                    />
-                  </label>
-                  <label className="flex flex-col gap-2 text-sm md:col-span-2">
-                    Observação
-                    <textarea
-                      className="rounded-lg border border-slate-200 px-3 py-2 min-h-[96px]"
-                      placeholder="Opcional: detalhar atividades ou justificativas."
-                    />
-                  </label>
-                </div>
-                <div className="flex flex-wrap gap-3 mt-5">
-                  <button className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
-                    Salvar apontamento
-                  </button>
-                  <button className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600">
-                    Pré-visualizar impacto
-                  </button>
-                </div>
+                <h2 className="text-lg font-semibold">Diretrizes da sincronização</h2>
+                <p className="text-sm text-slate-500">
+                  A ferramenta não recebe apontamentos diretos: tudo é consolidado na planilha.
+                </p>
+                <ul className="mt-4 space-y-3 text-sm text-slate-600">
+                  {syncHighlights.map(item => (
+                    <li key={item.title} className="flex gap-3">
+                      <span className="mt-1 h-2 w-2 rounded-full bg-emerald-500"></span>
+                      <div>
+                        <p className="font-semibold text-slate-700">{item.title}</p>
+                        <p className="text-xs text-slate-500 mt-1">{item.detail}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
+            </div>
 
+            <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-lg font-semibold">Histórico semanal</h2>
                     <p className="text-sm text-slate-500">
-                      Visão rápida do total diário para ajuste de jornada.
+                      Dados carregados automaticamente da planilha oficial.
                     </p>
                   </div>
                   <span className="text-xs text-slate-500">Semana atual</span>
@@ -369,74 +371,74 @@ const TimeTrackingDashboard: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              <div className="space-y-6">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+                  <h2 className="text-lg font-semibold">Alertas ativos</h2>
+                  <p className="text-sm text-amber-700">
+                    Penalidades registradas impactam seu índice de qualidade.
+                  </p>
+                  <div className="mt-4 space-y-3">
+                    {alerts.map(alert => (
+                      <div
+                        key={alert.title}
+                        className="rounded-xl border border-amber-200 bg-white p-4"
+                      >
+                        <p className="text-sm font-semibold text-slate-900">{alert.title}</p>
+                        <p className="text-xs text-slate-500 mt-1">{alert.description}</p>
+                        <span className="mt-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
+                          {alert.level}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <h2 className="text-lg font-semibold">Qualidade do apontamento</h2>
+                  <p className="text-sm text-slate-500">Índice calculado por regularidade e conformidade.</p>
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Índice atual</span>
+                      <span className="font-semibold">92%</span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-slate-100">
+                      <div className="h-2 w-[92%] rounded-full bg-emerald-500"></div>
+                    </div>
+                  </div>
+                  <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                    <li className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                      Meta diária cumprida em 18 de 20 dias úteis.
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                      Sem apontamentos em finais de semana no mês atual.
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                      Duas ocorrências de horário noturno nesta semana.
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
-                <h2 className="text-lg font-semibold">Alertas ativos</h2>
-                <p className="text-sm text-amber-700">
-                  Penalidades registradas impactam seu índice de qualidade.
-                </p>
-                <div className="mt-4 space-y-3">
-                  {alerts.map(alert => (
-                    <div
-                      key={alert.title}
-                      className="rounded-xl border border-amber-200 bg-white p-4"
-                    >
-                      <p className="text-sm font-semibold text-slate-900">{alert.title}</p>
-                      <p className="text-xs text-slate-500 mt-1">{alert.description}</p>
-                      <span className="mt-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
-                        {alert.level}
-                      </span>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold">Registro de auditoria</h2>
+              <p className="text-sm text-slate-500">
+                Histórico das penalidades e alertas críticos sincronizados da planilha.
+              </p>
+              <div className="mt-4 space-y-3">
+                {auditEvents.map(event => (
+                  <div key={event.title} className="rounded-xl border border-slate-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-slate-900">{event.title}</p>
+                      <span className="text-xs text-slate-400">{event.date}</span>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold">Qualidade do apontamento</h2>
-                <p className="text-sm text-slate-500">Índice calculado por regularidade e conformidade.</p>
-                <div className="mt-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>Índice atual</span>
-                    <span className="font-semibold">92%</span>
+                    <p className="text-xs text-slate-500 mt-1">{event.detail}</p>
                   </div>
-                  <div className="mt-2 h-2 rounded-full bg-slate-100">
-                    <div className="h-2 w-[92%] rounded-full bg-emerald-500"></div>
-                  </div>
-                </div>
-                <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                  <li className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                    Meta diária cumprida em 18 de 20 dias úteis.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                    Sem apontamentos em finais de semana no mês atual.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                    Duas ocorrências de horário noturno nesta semana.
-                  </li>
-                </ul>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold">Registro de auditoria</h2>
-                <p className="text-sm text-slate-500">
-                  Histórico das penalidades e alertas críticos.
-                </p>
-                <div className="mt-4 space-y-3">
-                  {auditEvents.map(event => (
-                    <div key={event.title} className="rounded-xl border border-slate-200 p-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-slate-900">{event.title}</p>
-                        <span className="text-xs text-slate-400">{event.date}</span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">{event.detail}</p>
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
             </div>
           </section>
@@ -445,31 +447,6 @@ const TimeTrackingDashboard: React.FC = () => {
         {activeTab === 'regras' && (
           <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
             <div className="space-y-6">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold">Integração com Google Sheets</h2>
-                <p className="text-sm text-slate-500">
-                  Base oficial de usuários e sincronização bidirecional de apontamentos.
-                </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <p className="text-xs uppercase text-slate-500">Usuários sincronizados</p>
-                    <p className="text-2xl font-semibold mt-2">42</p>
-                    <p className="text-xs text-slate-500">Última atualização: há 15 min</p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 p-4">
-                    <p className="text-xs uppercase text-slate-500">Apontamentos sincronizados</p>
-                    <p className="text-2xl font-semibold mt-2">1.284</p>
-                    <p className="text-xs text-slate-500">Sincronização em tempo real</p>
-                  </div>
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 sm:col-span-2">
-                    <p className="text-sm font-semibold text-emerald-900">Fluxo automático de cadastro</p>
-                    <p className="text-xs text-emerald-700">
-                      Novos registros na planilha geram usuários com acesso imediato e status ativo.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-semibold">Regras e penalidades</h2>
                 <p className="text-sm text-slate-500">
@@ -483,6 +460,25 @@ const TimeTrackingDashboard: React.FC = () => {
                     </li>
                   ))}
                 </ul>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-semibold">Indicadores de qualidade</h2>
+                <p className="text-sm text-slate-500">
+                  Índice baseado em regularidade, meta diária e conformidade com horários.
+                </p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 p-4">
+                    <p className="text-xs uppercase text-slate-500">Índice médio do time</p>
+                    <p className="text-2xl font-semibold mt-2">89%</p>
+                    <p className="text-xs text-slate-500">Último fechamento mensal</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 p-4">
+                    <p className="text-xs uppercase text-slate-500">Usuários em risco</p>
+                    <p className="text-2xl font-semibold mt-2">6</p>
+                    <p className="text-xs text-slate-500">Necessitam de acompanhamento</p>
+                  </div>
+                </div>
               </div>
             </div>
 
